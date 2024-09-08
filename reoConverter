@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Formatter and JSON Beautifier</title>
+
+    <!-- adding highlight.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 2px;
+            background-color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2, h3 {
+            text-align: center;
+            margin-top: 2px;
+            margin-bottom: -2px;
+            font-size: medium;
+        }
+        .offline {
+            color: #1f0455;
+        }
+
+        .outline {
+            text-shadow: #ffffff 1px 0px 1px, #ffffff 0px 1px 1px, #ffffff 0px -1px 1px, #ffffff -1px 0px 1px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1024px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            background-color: #e0e0e0;
+        }
+
+        textarea {
+            width: 100%;
+            margin-bottom: 10px;
+            resize: both;
+            background-color: white;
+            border: 1px solid black;
+            box-sizing: border-box;
+        }
+
+        .tab {
+            background-color: #d3d3d3;
+            padding: 5px 10px;
+            display: inline-block;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            border: 1px solid black;
+            border-bottom: none;
+            font-weight: bold;
+            margin-bottom: -1px;
+        }
+
+        .textarea-container {
+            width: 100%;
+            position: relative;
+        }
+
+        .textarea-container, .output-container {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: px;
+            font-size: 16px;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        button:hover {
+            border-color: #908e8d;
+        }
+
+        .buttons-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            font-size: 8pt;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .arrow-buttons {
+            display: flex;
+            align-items: center;
+        }
+
+        .arrow-button {
+            width: 40px;
+        }
+
+        pre {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            background-color: white;
+            border: 1px solid black;
+            padding: 10px;
+            width: 100%;
+            min-height: 572px;
+            margin-top: 0;
+            resize: both;
+            overflow: auto;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 29px;
+            right: 1px;
+            background-color: #828482;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            height: 20px;
+            font-size: 10px;
+        }
+
+        .copy-button:hover {
+            background-color: #2b2c2b;
+        }
+
+        .copy-message {
+            position: absolute;
+            top: 42px;
+            right: 70px;
+            color: #1a491a;
+            padding: 5px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        /* JSON keys style */
+        .hljs-attr {
+            font-weight: bold;
+        }
+
+        /* for mobiles */
+        @media (max-width: 600px) {
+            h2, h3 {
+                font-size: 18px;
+            }
+
+            button {
+                width: 100%;
+                margin: 10px 0;
+            }
+
+            #fontSizeDisplay {
+                display: block;
+                margin-top: 10px;
+            }
+
+            .buttons-row {
+                flex-direction: column;
+            }
+
+            .arrow-buttons {
+                flex-direction: row;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2 class="outline">Text Formatter and JSON Beautifier<sup class="offline outline">offline</sup></h2>
+
+    <div class="container">
+        <div class="textarea-container">
+            <div class="tab outline">Input</div>
+            <textarea id="inputText" rows="10" placeholder='Enter text, JSON, or JS/TS object here' oninput="checkJSON()"></textarea>
+            <button class="copy-button" onclick="pasteFromClipboard()">Paste</button>
+        </div>
+
+        <div class="buttons-row">
+            <div class="button-container">
+                <button onclick="formatText()">Transform Text</button>
+                <span>Transform non-JSON text</span>
+            </div>
+            <div class="button-container">
+                <button id="beautifyBtn" onclick="beautifyJSON()" disabled>Beautify JSON</button>
+                <span id="jsonStatus">Validate JSON</span>
+            </div>
+            <div class="button-container">
+                <button onclick="jsTsToJson()">JS/TS to JSON</button>
+                <span>Convert JS/TS to JSON</span>
+            </div>
+            <div class="button-container">
+                <div class="arrow-buttons">
+                    <button class="arrow-button" onclick="increaseFont()">&#9650;</button>
+                    <button class="arrow-button" onclick="decreaseFont()">&#9660;</button>
+                </div>
+                <span>Font size: <span id="fontSizeDisplay">12px</span></span>
+            </div>
+            <div class="button-container">
+                <button onclick="toggleTextAreas()">Toggle</button>
+                <span>Toggle text area sizes</span>
+            </div>
+        </div>
+
+        <div class="textarea-container output-container">
+            <div class="tab outline">Result</div>
+            <pre id="outputText" class="json"></pre>
+            <button class="copy-button" onclick="copyToClipboard()">Copy</button>
+            <div class="copy-message" id="copyMessage">Copied to clipboard!</div>
+        </div>
+    </div>
+
+    <script>
+        // Initial variables
+        let fontSize = 12;
+        let isMinimized = false;
+
+        // Hight constants for text area
+        const INPUT_MIN_HEIGHT = "30px";
+        const OUTPUT_MIN_HEIGHT = "708px";
+        const INPUT_MAX_HEIGHT = "150px";
+        const OUTPUT_MAX_HEIGHT = "572px";
+
+        // Function to format regular text (non-JSON)
+        function formatText() {
+            let text = document.getElementById("inputText").value;
+
+            // Replace \n, \" and \\ for regular text transformations
+            let formattedText = text
+                .replace(/\\n/g, '\n')
+                .replace(/\\"/g, '"')
+                .replace(/\\\\/g, '\\');
+
+            document.getElementById("outputText").textContent = formattedText;
+            hljs.highlightBlock(document.getElementById("outputText"));
+        }
+
+        // Function to check if the entered text is valid JSON
+        function checkJSON() {
+            let jsonText = document.getElementById("inputText").value;
+            try {
+                JSON.parse(jsonText);
+                document.getElementById("beautifyBtn").disabled = false;
+                document.getElementById("jsonStatus").textContent = "Valid JSON";
+                document.getElementById("jsonStatus").style.color = "green";
+            } catch (error) {
+                document.getElementById("beautifyBtn").disabled = true;
+                document.getElementById("jsonStatus").textContent = "Invalid JSON";
+                document.getElementById("jsonStatus").style.color = "red";
+            }
+        }
+
+        // Function to beautify JSON
+        function beautifyJSON() {
+            let jsonText = document.getElementById("inputText").value;
+            try {
+                let jsonObject = JSON.parse(jsonText);
+                let beautifiedJSON = JSON.stringify(jsonObject, null, 4);
+                document.getElementById("outputText").textContent = beautifiedJSON;
+                hljs.highlightBlock(document.getElementById("outputText"));
+            } catch (error) {
+                document.getElementById("outputText").textContent = "Error beautifying JSON: " + error.message;
+            }
+        }
+
+        // Function to convert JS/TS object to JSON
+        function jsTsToJson() {
+            let jsText = document.getElementById("inputText").value;
+            try {
+                let jsObject = eval('(' + jsText + ')');
+                let jsonOutput = JSON.stringify(jsObject, null, 4);
+                document.getElementById("outputText").textContent = jsonOutput;
+                hljs.highlightBlock(document.getElementById("outputText"));
+            } catch (error) {
+                document.getElementById("outputText").textContent = "Error converting JS/TS to JSON: " + error.message;
+            }
+        }
+
+        // Function to copy content to clipboard
+        function copyToClipboard() {
+            const content = document.getElementById("outputText").textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                const message = document.getElementById("copyMessage");
+                message.style.display = 'block';
+                setTimeout(() => {
+                    message.style.display = 'none';
+                }, 2000);
+            }).catch(err => {
+                console.error("Could not copy text: ", err);
+            });
+        }
+
+        // Function to paste content from clipboard into the input textarea
+        function pasteFromClipboard() {
+            navigator.clipboard.readText().then(text => {
+                document.getElementById("inputText").value = text;
+            }).catch(err => {
+                console.error("Could not paste text: ", err);
+            });
+        }
+
+        // Function to increase font size
+        function increaseFont() {
+            fontSize += 2;
+            document.getElementById("outputText").style.fontSize = fontSize + "px";
+            document.getElementById("fontSizeDisplay").textContent = fontSize + "px";
+        }
+
+        // Function to decrease font size
+        function decreaseFont() {
+            fontSize -= 2;
+            if (fontSize >= 8) {
+                document.getElementById("outputText").style.fontSize = fontSize + "px";
+                document.getElementById("fontSizeDisplay").textContent = fontSize + "px";
+            }
+        }
+
+        // Function to toggle text area sizes
+        function toggleTextAreas() {
+            const inputTextArea = document.getElementById("inputText");
+            const outputTextArea = document.getElementById("outputText");
+
+            if (!isMinimized) {
+                inputTextArea.style.height = INPUT_MIN_HEIGHT;
+                outputTextArea.style.minHeight = OUTPUT_MIN_HEIGHT;
+                isMinimized = true;
+            } else {
+                inputTextArea.style.height = INPUT_MAX_HEIGHT;
+                outputTextArea.style.minHeight = OUTPUT_MAX_HEIGHT;
+                isMinimized = false;
+            }
+        }
+
+        // Init for syntax highlight
+        document.addEventListener("DOMContentLoaded", () => {
+            hljs.highlightAll();
+        });
+    </script>
+</body>
+</html>
