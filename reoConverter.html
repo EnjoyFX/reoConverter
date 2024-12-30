@@ -76,7 +76,7 @@
         }
 
         button {
-            padding: px;
+            padding: 10px;
             font-size: 16px;
             border-radius: 5px;
             margin: 5px;
@@ -233,7 +233,7 @@
         let fontSize = 12;
         let isMinimized = false;
 
-        // Hight constants for text area
+        // Height constants for text area
         const INPUT_MIN_HEIGHT = "30px";
         const OUTPUT_MIN_HEIGHT = "708px";
         const INPUT_MAX_HEIGHT = "150px";
@@ -250,7 +250,7 @@
                 .replace(/\\\\/g, '\\');
 
             document.getElementById("outputText").textContent = formattedText;
-            hljs.highlightBlock(document.getElementById("outputText"));
+            hljs.highlightElement(document.getElementById("outputText"));
         }
 
         // Function to check if the entered text is valid JSON
@@ -275,7 +275,7 @@
                 let jsonObject = JSON.parse(jsonText);
                 let beautifiedJSON = JSON.stringify(jsonObject, null, 4);
                 document.getElementById("outputText").textContent = beautifiedJSON;
-                hljs.highlightBlock(document.getElementById("outputText"));
+                hljs.highlightElement(document.getElementById("outputText"));
             } catch (error) {
                 document.getElementById("outputText").textContent = "Error beautifying JSON: " + error.message;
             }
@@ -285,10 +285,10 @@
         function jsTsToJson() {
             let jsText = document.getElementById("inputText").value;
             try {
-                let jsObject = eval('(' + jsText + ')');
+                let jsObject = Function('"use strict";return (' + jsText + ')')();
                 let jsonOutput = JSON.stringify(jsObject, null, 4);
                 document.getElementById("outputText").textContent = jsonOutput;
-                hljs.highlightBlock(document.getElementById("outputText"));
+                hljs.highlightElement(document.getElementById("outputText"));
             } catch (error) {
                 document.getElementById("outputText").textContent = "Error converting JS/TS to JSON: " + error.message;
             }
